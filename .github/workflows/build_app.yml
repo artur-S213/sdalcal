@@ -1,0 +1,159 @@
+name: Multi-Platform Qt Build
+run-name: Release ${{ github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS Intel
+          - os: macos-14
+            arch: x86_64
+            qt_arch: clang_64
+            min_os: "10.15"
+          # macOS Apple Silicon
+          - os: macos-14
+            arch: arm64
+            qt_arch: clang_64
+            min_os: "11.0"
+          # Windows
+          - os: windows-latest
+            arch: x64
+            qt_arch: win64_msvc2022_64
+          # # Linux
+          - os: ubuntu-24.04 
+            arch: x86_64
+            qt_arch: linux_gcc_64
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3 # Prüfe regelmäßig auf v4
+        with:
+          version: '6.8.0'
+          arch: ${{ matrix.qt_arch }}
+
+      - name: Install Linux Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxcb-xinerama0 libgl1-mesa-dev libxkbcommon-x11-0 libxcb-cursor0 \
+            build-essential devscripts debhelper rpm # Tools für .deb und .rpm
+
+      - name: Set macOS Deployment Target
+        if: runner.os == 'macOS'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=${{ matrix.min_os }}" >> $GITHUB_ENV
+
+      - name: Configure & Build
+        shell: bash
+        run: |
+          cmake -B build -S . \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=./inst \
+            ${{ runner.os == 'Windows' && '-G "Visual Studio 17 2022"' || '' }} \
+            ${{ runner.os == 'macOS' && format('-DCMAKE_OSX_ARCHITECTURES={0}', matrix.arch) || '' }}
+          
+          # Bauen
+          cmake --build build --config Release --parallel
+          
+          # Installation (kopiert die EXE/APP nach ./inst)
+          cmake --install build --config Release
+
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          
+          # Suche die EXE im inst-Ordner
+          $EXE_PATH = (Get-ChildItem -Path inst -Filter *.exe -Recurse | Select-Object -ExpandProperty FullName -First 1)
+          Write-Host "Deploying: $EXE_PATH"
+          
+          # Kopieren und windeployqt ausführen
+          Copy-Item $EXE_PATH -Destination dist/
+          $TARGET_EXE = "dist/$($EXE_PATH | Split-Path -Leaf)"
+          
+          $WIND_PATH = (Get-ChildItem -Path $env:Qt6_DIR -Filter windeployqt.exe -Recurse | Select-Object -ExpandProperty FullName -First 1)
+          & $WIND_PATH --dir dist --qmldir src/UI/ --no-translations --compiler-runtime $TARGET_EXE
+          
+          # Zippen für das Release
+          Compress-Archive -Path dist/* -DestinationPath build/Sdalcal_win_x86_64.zip
+
+      - name: Package MacOS
+        if: runner.os == 'macOS'
+        run: |
+          # Suche das .app Bundle im Installations-Verzeichnis
+          APP_BUNDLE=$(find inst -name "*.app" -type d | head -n 1)
+          echo "Found Bundle: $APP_BUNDLE"
+          
+          # Deployment
+          macdeployqt "$APP_BUNDLE" -qmldir=src/UI/ -verbose=1 -no-plugins
+          sleep 5
+
+          echo "Ad-hoc signing app"
+          codesign --force --deep --sign - "$APP_BUNDLE"
+          
+          echo "Create DMG-Image..."
+          hdiutil create -volname "Sdalcal" -srcfolder "$APP_BUNDLE" -ov -format UDZO "Sdalcal_MacOS_${{ matrix.arch }}.dmg"
+          
+          # Move .dmg file to the build folder
+          mkdir -p build
+          mv *.dmg build/
+
+          # # Move .dmg file into build folder
+          # mv inst/*.dmg build/Sdalcal_MacOS_${{ matrix.arch }}.dmg
+
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          cd build
+          cpack -G DEB
+          cpack -G RPM
+          ls -lh *.deb *.rpm
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: assets-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            build/*.dmg
+            build/*.zip
+            build/*.tar.gz
+            build/*.deb
+            build/*.rpm
+          if-no-files-found: warn  
+          
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-assets
+          pattern: assets-*
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: all-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
