@@ -1,3 +1,5 @@
+mod runtime;
+
 pub struct SdalcalCoreResults{
     delay: f64,
     soundLevelL2: f64,
