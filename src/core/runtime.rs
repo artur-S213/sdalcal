@@ -31,6 +31,17 @@ impl SdalcalCore {
         // =soundLevelL1 - Einstellspegel
         let setpoint: f32 = levelL1 - adjustmentLevel;
 
+        //println!("#########################");
+        //println!("NEW CALCULATION");
+        //println!("Temperature: {temperature}");
+        //println!("Soundspeed: {soundSpeed}");
+        //println!("Delay: {delay}");
+        //println!("SoundLevelL2: {soundLevelL2}");
+        //println!("Droplevel: {dropLevel}");
+        //println!("Adjustmentlevel: {adjustmentLevel}");
+        //println!("Setpoint: {setpoint}");
+        //println!(" ");
+
         SdalcalCoreResults {
             delay,
             soundLevelL2,
