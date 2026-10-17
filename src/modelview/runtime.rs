@@ -34,7 +34,7 @@ impl SdalcalController {
         self.updateUI(self.calculateParameters(distance, temperature, level));
     }
     fn calculateParameters(&self, distance: f32, temperature: f32, level: f32) -> SdalcalCoreResults {
-        let res: SdalcalCoreResults = SdalcalCore::calculateAllValues(distance, level);
+        let res: SdalcalCoreResults = SdalcalCore::calculateAllValues(distance, temperature, level);
         res
     }
 
