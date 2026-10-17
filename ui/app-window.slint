@@ -5,6 +5,7 @@ import { Parameter-Tile } from "parameter-tile.slint";
 export component AppWindow inherits Window {
     in-out property <float> distance-meter <=> distance-tile.value;
     in-out property <float> speakerL1 <=> levelL1-tile.value;
+    in-out property <float> temperature <=> temperature-tile.value;
 
     in-out property <float> delay <=> delay-tile.value;
     in-out property <float> speakerL2 <=> levelL2-tile.value;
@@ -12,7 +13,7 @@ export component AppWindow inherits Window {
     in-out property <float> dropLevel <=> dropLevel-tile.value;
     in-out property <float> setpoint <=> setpoint-tile.value;
     
-    callback parameter-changed(float, float);
+    callback parameter-changed(float, float, float);
 
     width: 1205px;
     height: 100px;
@@ -31,7 +32,15 @@ export component AppWindow inherits Window {
                 input: true;
                 color-tile: #ffcda1;
                 accepted(val) => {
-                    root.parameter-changed(val, speakerL1);
+                    root.parameter-changed(val, temperature, speakerL1);
+                }
+            }
+            temperature-tile := Parameter-Tile {
+                title: "Temperatur in °C";
+                input: true;
+                color-tile: #f4d6c0;
+                accepted(val) => {
+                    root.parameter-changed(distance-meter, val, speakerL1);
                 }
             }
             delay-tile := Parameter-Tile {
@@ -43,7 +52,7 @@ export component AppWindow inherits Window {
                 input: true;
                 color-tile: #bee3f8;
                 accepted(val) => {
-                    root.parameter-changed(distance-meter, val);
+                    root.parameter-changed(distance-meter, temperature, val);
                 }
             }
             levelL2-tile := Parameter-Tile {
