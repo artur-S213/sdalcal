@@ -1,11 +1,11 @@
 mod runtime;
 
 pub struct SdalcalCoreResults{
-    delay: f64,
-    soundLevelL2: f64,
-    dropLevel: f64,
-    adjustmentLevel: f64,
-    setpoint: f64
+    pub delay: f32,
+    pub soundLevelL2: f32,
+    pub dropLevel: f32,
+    pub adjustmentLevel: f32,
+    pub setpoint: f32
 }
 
 pub struct SdalcalCore {}

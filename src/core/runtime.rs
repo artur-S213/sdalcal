@@ -3,15 +3,18 @@ use super::SdalcalCoreResults;
 
 impl SdalcalCore {
 
+    // c(0°) = 331,3 m/s
+    // c(t) = 331,3 m/s + 0,6 m/(s * C°) * t, where t in C°
     // --- PUBLIC FUNCTIONS ---
     pub fn calculateAllValues(distance: f32, levelL1: f32) -> SdalcalCoreResults {
-        // here comes the implementation of the core calculations
+        // TODO: implement this method
+        println!("TODO: Implement this function");
         SdalcalCoreResults {
-            delay: 1.0,
-            soundLevelL2: 0.0,
-            dropLevel: 0.0,
-            adjustmentLevel: 0.0,
-            setpoint: 0.0
+            delay: 0.1,
+            soundLevelL2: 0.1,
+            dropLevel: 0.1,
+            adjustmentLevel: 0.1,
+            setpoint: 0.1
         }
     }   
 }

@@ -20,25 +20,32 @@ impl SdalcalController {
 
         if let Some(ui) = self.ui.upgrade() {
             ui.on_parameter_changed({
-                move |distance, level| {
+                move |distance, temperature, level| {
                     ui_handle.set_distance_meter(distance);
+                    ui_handle.set_temperature(temperature);
                     ui_handle.set_speakerL1(level);
-                    ctrl.handleInputChange(distance, level);
+                    ctrl.handleInputChange(distance, temperature, level);
                 }
             });
         }
     }
 
-    fn handleInputChange(&self, distance: f32, level: f32) {
-        self.updateUI(self.calculateParameters(distance, level));
+    fn handleInputChange(&self, distance: f32, temperature: f32, level: f32) {
+        self.updateUI(self.calculateParameters(distance, temperature, level));
     }
-    fn calculateParameters(&self, distance: f32, level: f32) -> SdalcalCoreResults {
+    fn calculateParameters(&self, distance: f32, temperature: f32, level: f32) -> SdalcalCoreResults {
         let res: SdalcalCoreResults = SdalcalCore::calculateAllValues(distance, level);
         res
     }
 
     fn updateUI(&self, newResults: SdalcalCoreResults) {
-        println!("TODO: Implement this function");
+        if let Some(ui) = self.ui.upgrade() {
+            ui.set_delay(newResults.delay);
+            ui.set_speakerL2(newResults.soundLevelL2);
+            ui.set_adjustmentLevel(newResults.adjustmentLevel);
+            ui.set_dropLevel(newResults.dropLevel);
+            ui.set_setpoint(newResults.setpoint);
+        }
 
     }
 }
