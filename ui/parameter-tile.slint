@@ -33,7 +33,7 @@ export component Parameter-Tile inherits Rectangle {
             }
             
             if (root.input) : TextInput {
-                text: "0.00";
+                text: root.value.to-fixed(2);
                 font-size: 15px;
                 font-weight: 800;
                 font-family: "Inter";

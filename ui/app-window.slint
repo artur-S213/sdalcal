@@ -38,6 +38,7 @@ export component AppWindow inherits Window {
             temperature-tile := Parameter-Tile {
                 title: "Temperatur in °C";
                 input: true;
+                value: 20.00;
                 color-tile: #f4d6c0;
                 accepted(val) => {
                     root.parameter-changed(distance-meter, val, speakerL1);
