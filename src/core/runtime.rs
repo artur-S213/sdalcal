@@ -14,7 +14,7 @@ impl SdalcalCore {
 
         // soundLevelL2 =  soundlevelL1 - 20 * LOG_10(distance)
         let soundLevelL2: f32;
-        if (distance <= 0.0){
+        if distance <= 0.0{
             soundLevelL2 = 0.0;
         }
         else {

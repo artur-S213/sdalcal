@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use super::SdalcalController;
-use slint::{ComponentHandle, Weak};
+use slint::{ComponentHandle};
 use crate::core::*;
 use crate::AppWindow;
 

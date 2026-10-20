@@ -1,6 +1,4 @@
-import { Button, VerticalBox, HorizontalBox  } from "std-widgets.slint";
 import { Parameter-Tile } from "parameter-tile.slint";
-
 
 export component AppWindow inherits Window {
     in-out property <float> distance-meter <=> distance-tile.value;
@@ -12,67 +10,100 @@ export component AppWindow inherits Window {
     in-out property <float> adjustmentLevel <=> adjustmentLevel-tile.value;
     in-out property <float> dropLevel <=> dropLevel-tile.value;
     in-out property <float> setpoint <=> setpoint-tile.value;
-    
+
     callback parameter-changed(float, float, float);
 
-    width: 1370px;
-    height: 100px;
+    title: "Sdalcal";
+
+    // preferred-* statt width/height: Das Fenster bleibt frei skalierbar
+    preferred-width: 1395px;
+    preferred-height: 100px;
+    min-width: 280px;
     background: #ffffff;
 
-    VerticalLayout {
-        alignment: center;
-        vertical-stretch: 1;
-        HorizontalBox {
-            horizontal-stretch: 1;
-            width: root.width;
-            spacing: 5px;
-            
-            distance-tile := Parameter-Tile {
-                title: "Eingabe in m";
-                input: true;
-                color-tile: #ffcda1;
-                accepted(val) => {
-                    root.parameter-changed(val, temperature, speakerL1);
-                }
+    // ---- Responsive-Einstellungen (hier bequem anpassbar) ----
+    property <length> outer-padding: 5px;
+    property <length> tile-spacing: 5px;
+    // Unterhalb dieser Fensterbreite gilt "Smartphone-Modus"
+    property <length> phone-breakpoint: 500px;
+    property <bool> phone: root.width < phone-breakpoint;
+    // Normale Breite einer Kachel und Mindestbreite, bevor sie umbricht
+    property <length> tile-preferred: 170px;
+    property <length> tile-min: 140px;
+    // Smartphone: Mindestbreite = ganze Zeile -> jede Kachel steht allein in ihrer Zeile
+    property <length> effective-min: phone ? root.width - 2 * outer-padding : tile-min;
+
+    FlexboxLayout {
+        padding: root.outer-padding;
+        spacing: root.tile-spacing;
+        flex-direction: row;
+        flex-wrap: wrap;
+        // Kacheln wachsen, um jede Zeile voll auszufüllen
+        alignment: stretch;
+        // Zeilen vertikal zentrieren (wie vorher); Kacheln einer Zeile gleich hoch
+        cross-axis-line-alignment: center;
+        cross-axis-alignment: stretch;
+
+        distance-tile := Parameter-Tile {
+            preferred-width: root.tile-preferred;
+            min-width: root.effective-min;
+            title: "Eingabe in m";
+            input: true;
+            color-tile: #ffcda1;
+            accepted(val) => {
+                root.parameter-changed(val, temperature, speakerL1);
             }
-            temperature-tile := Parameter-Tile {
-                title: "Temperatur in °C";
-                input: true;
-                value: 20.00;
-                color-tile: #f4d6c0;
-                accepted(val) => {
-                    root.parameter-changed(distance-meter, val, speakerL1);
-                }
+        }
+        temperature-tile := Parameter-Tile {
+            preferred-width: root.tile-preferred;
+            min-width: root.effective-min;
+            title: "Temperatur in °C";
+            input: true;
+            value: 20.00;
+            color-tile: #f4d6c0;
+            accepted(val) => {
+                root.parameter-changed(distance-meter, val, speakerL1);
             }
-            delay-tile := Parameter-Tile {
-                title: "Verzögerung in ms";
-                color-tile: #ffecc1;
+        }
+        delay-tile := Parameter-Tile {
+            preferred-width: root.tile-preferred;
+            min-width: root.effective-min;
+            title: "Verzögerung in ms";
+            color-tile: #ffecc1;
+        }
+        levelL1-tile := Parameter-Tile {
+            preferred-width: root.tile-preferred;
+            min-width: root.effective-min;
+            title: "Schallpegel L1 in db";
+            input: true;
+            color-tile: #bee3f8;
+            accepted(val) => {
+                root.parameter-changed(distance-meter, temperature, val);
             }
-            levelL1-tile := Parameter-Tile {
-                title: "Schallpegel L1 in db";
-                input: true;
-                color-tile: #bee3f8;
-                accepted(val) => {
-                    root.parameter-changed(distance-meter, temperature, val);
-                }
-            }
-            levelL2-tile := Parameter-Tile {
-                title: "Schallpegel L2 in db";
-                color-tile: #bee3f8;
-            }
-            adjustmentLevel-tile := Parameter-Tile {
-                title: "Einstellungspegel in -db";
-                color-tile: #cbfeff;
-            }
-            dropLevel-tile := Parameter-Tile {
-                title: "Abfallpegel in -db";
-                color-tile: #adffe1;
-            }
-            setpoint-tile := Parameter-Tile {
-                title: "Sollwertpegel in db";
-                color-tile: #6dff8f;
-            }
-    
+        }
+        levelL2-tile := Parameter-Tile {
+            preferred-width: root.tile-preferred;
+            min-width: root.effective-min;
+            title: "Schallpegel L2 in db";
+            color-tile: #bee3f8;
+        }
+        adjustmentLevel-tile := Parameter-Tile {
+            preferred-width: root.tile-preferred;
+            min-width: root.effective-min;
+            title: "Einstellungspegel in -db";
+            color-tile: #cbfeff;
+        }
+        dropLevel-tile := Parameter-Tile {
+            preferred-width: root.tile-preferred;
+            min-width: root.effective-min;
+            title: "Abfallpegel in -db";
+            color-tile: #adffe1;
+        }
+        setpoint-tile := Parameter-Tile {
+            preferred-width: root.tile-preferred;
+            min-width: root.effective-min;
+            title: "Sollwertpegel in db";
+            color-tile: #6dff8f;
         }
     }
 }
